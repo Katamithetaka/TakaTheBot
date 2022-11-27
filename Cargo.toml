@@ -2,7 +2,17 @@
 name = "taka_the_bot"
 version = "0.1.0"
 edition = "2021"
+build="build.rs"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+async-trait = "0.1.58"
+serde_json = "1.0.89"
+twilight-cache-inmemory = "0.14.0"
+twilight-gateway = "0.14.0"
+twilight-http = "0.14.0"
+twilight-model = "0.14.0"
+twilight-standby = "0.14.0"
+twilight-util = { version="0.14.0", default-features=false, features = ["builder", "permission-calculator", "snowflake"] }
