@@ -15,4 +15,4 @@ twilight-http = "0.14.0"
 twilight-model = "0.14.0"
 twilight-standby = "0.14.0"
 twilight-util = { version="0.14.0", default-features=false, features = ["builder", "permission-calculator", "snowflake"] }
-
+automatic_generation = { path="../automatic_generation" } 
