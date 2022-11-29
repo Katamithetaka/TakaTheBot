@@ -1,9 +1,11 @@
 extern crate proc_macro;
+
+mod slash_commands;
+use std::fs::DirEntry;
+
 use proc_macro::TokenStream;
 
-use std::fs::{self, DirEntry};
-
-fn is_file(entry: &DirEntry) -> bool {
+pub(crate) fn is_file(entry: &DirEntry) -> bool {
     if let Ok(file_type) = entry.file_type() {
         file_type.is_file()
     } else {
@@ -11,7 +13,7 @@ fn is_file(entry: &DirEntry) -> bool {
     }
 }
 
-fn get_filename_and_extension(
+pub(crate) fn get_filename_and_extension(
     file: &Result<DirEntry, std::io::Error>,
 ) -> (Option<String>, Option<String>) {
     if let Ok(entry) = file {
@@ -44,51 +46,12 @@ fn get_filename_and_extension(
     (None, None)
 }
 
-macro_rules! GET_COMMANDS_TEMPLATE {
-    ($module_str: ident, $make_command_str: ident) => {
-        format!(r#"
-        {}
-
-        pub fn get_commands() -> CommandCollectionType {{
-            let mut collection = CommandCollectionType::new();
-            
-            {}
-            
-            collection
-        }}
-        "#, $module_str, $make_command_str)
-    }
-}
-
-macro_rules! MODULE_IMPORT {
-    ($name: ident) => {
-        &format!("mod {};\n", $name)
-    };
-}
-
-macro_rules! MAKE_SLASH_COMMAND {
-    ($name: ident) => {
-        &format!("make_command!(collection, {});\n", $name)
-    };
-}
-
-#[proc_macro]
-pub fn make_get_slash_commands(_item: TokenStream) -> TokenStream {
-    let mut slash_commands = vec![];
-    let _str: String = String::from_utf8(
-        _item
-            .to_string()
-            .into_bytes()
-            .into_iter()
-            .skip(1)
-            .rev()
-            .skip(1)
-            .rev()
-            .collect(),
-    )
-    .unwrap_or("taka_the_bot/src/slash_commands".to_owned());
-
-    if let Ok(result) = fs::read_dir(_str) {
+pub(crate) fn get_all_filenames_of_ext_in_folder(
+    dir: &str,
+    extension: Option<&str>,
+) -> Vec<String> {
+    let mut array = vec![];
+    if let Ok(result) = std::fs::read_dir(dir) {
         for dir_entry in result {
             let (file_name, ext) = get_filename_and_extension(&dir_entry);
 
@@ -103,24 +66,20 @@ pub fn make_get_slash_commands(_item: TokenStream) -> TokenStream {
             } else {
                 continue;
             };
-
-            if ext != "rs" {
-                continue;
+            if let Some(e) = extension {
+                if ext != e {
+                    continue;
+                }
             }
 
-            slash_commands.push(file_name);
+            array.push(file_name);
         }
     }
 
-    let mut slash_command_modules = String::new();
-    let mut slash_command_make_commands = String::new();
+    array
+}
 
-    for command in slash_commands {
-        slash_command_modules = slash_command_modules + MODULE_IMPORT!(command);
-        slash_command_make_commands = slash_command_make_commands + MAKE_SLASH_COMMAND!(command);
-    }
-    GET_COMMANDS_TEMPLATE!(slash_command_modules, slash_command_make_commands)
-        .as_str()
-        .parse()
-        .unwrap()
+#[proc_macro]
+pub fn make_get_slash_commands(item: TokenStream) -> TokenStream {
+    slash_commands::make_get_slash_commands(item)
 }
