@@ -1,0 +1,2 @@
+[workspace]
+members = ["taka_the_bot", "automatic_generation"]
